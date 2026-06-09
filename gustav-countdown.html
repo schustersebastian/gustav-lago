@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Gustav's Lago Countdown</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --lago: #00c8ff;
+    --lago-dark: #0088bb;
+    --night: #050d1a;
+    --deep: #091628;
+    --card: #0d1f35;
+    --border: rgba(0,200,255,0.15);
+    --text: #e8f4ff;
+    --muted: rgba(232,244,255,0.5);
+    --sun: #ffd166;
+    --green: #06ffa5;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--night);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Animated water background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 120%, rgba(0,136,187,0.25) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 20% 80%, rgba(0,200,255,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 90%, rgba(6,255,165,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Stars */
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d, 3s) var(--delay, 0s) infinite alternate;
+    opacity: var(--op, 0.6);
+  }
+  @keyframes twinkle { from { opacity: 0.1; } to { opacity: var(--op, 0.8); } }
+
+  /* Waves at bottom */
+  .wave-wrap {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .wave {
+    position: absolute;
+    bottom: 0;
+    width: 200%;
+    height: 80px;
+    border-radius: 50%;
+    animation: wave-move linear infinite;
+  }
+  .wave1 {
+    background: rgba(0,200,255,0.06);
+    animation-duration: 8s;
+    left: -50%;
+  }
+  .wave2 {
+    background: rgba(0,136,187,0.08);
+    animation-duration: 12s;
+    animation-direction: reverse;
+    bottom: 10px;
+    left: -50%;
+  }
+  @keyframes wave-move {
+    0% { transform: translateX(0) scaleY(1); }
+    50% { transform: translateX(25%) scaleY(1.1); }
+    100% { transform: translateX(50%) scaleY(1); }
+  }
+
+  /* Layout */
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 100px;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 8px;
+    animation: fadeUp 0.8s ease both;
+  }
+  .flag-row {
+    font-size: 28px;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 15vw, 72px);
+    letter-spacing: 2px;
+    line-height: 0.9;
+    background: linear-gradient(135deg, var(--lago) 0%, #ffffff 50%, var(--lago) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fadeUp 0.7s ease both;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  /* Countdown */
+  .countdown-wrap {
+    width: 100%;
+    margin: 28px 0 24px;
+    animation: fadeUp 0.9s ease both;
+  }
+  .countdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .cd-unit {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 8px 12px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cd-unit::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--lago), transparent);
+    opacity: 0.6;
+  }
+  .cd-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 10vw, 48px);
+    color: var(--lago);
+    line-height: 1;
+    letter-spacing: 1px;
+    text-shadow: 0 0 20px rgba(0,200,255,0.4);
+    transition: transform 0.2s;
+  }
+  .cd-num.flip { animation: flip 0.3s ease; }
+  @keyframes flip {
+    0% { transform: translateY(-8px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .cd-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+    font-weight: 700;
+  }
+
+  /* Abfahrt info */
+  .abfahrt-chip {
+    background: rgba(0,200,255,0.1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--lago);
+    font-family: 'DM Mono', monospace;
+    text-align: center;
+    margin-bottom: 24px;
+    animation: fadeUp 1s ease both;
+  }
+
+  /* Itinerary mini */
+  .stops {
+    width: 100%;
+    margin-bottom: 24px;
+    animation: fadeUp 1.1s ease both;
+  }
+  .stop {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .stop:last-child { border-bottom: none; }
+  .stop-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid var(--lago);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .stop-dot.highlight {
+    background: var(--lago);
+    box-shadow: 0 0 16px rgba(0,200,255,0.5);
+    animation: pulse-lago 2s infinite;
+  }
+  @keyframes pulse-lago {
+    0%, 100% { box-shadow: 0 0 8px rgba(0,200,255,0.4); }
+    50% { box-shadow: 0 0 24px rgba(0,200,255,0.8); }
+  }
+  .stop-info {}
+  .stop-date {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .stop-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .stop-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  /* Fun facts cards */
+  .facts-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--lago);
+    margin-bottom: 12px;
+    width: 100%;
+    animation: fadeUp 1.2s ease both;
+  }
+  .facts-scroll {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: fadeUp 1.3s ease both;
+  }
+  .fact-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .fact-card:active { transform: scale(0.98); }
+  .fact-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: var(--lago);
+    opacity: 0.03;
+    transform: translate(20px, -20px);
+  }
+  .fact-card.green-card { border-color: rgba(6,255,165,0.2); }
+  .fact-card.green-card::after { background: var(--green); }
+  .fact-card.sun-card { border-color: rgba(255,209,102,0.2); }
+  .fact-card.sun-card::after { background: var(--sun); }
+  .fact-emoji { font-size: 28px; flex-shrink: 0; line-height: 1; }
+  .fact-content {}
+  .fact-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--lago);
+    margin-bottom: 3px;
+  }
+  .fact-card.green-card .fact-label { color: var(--green); }
+  .fact-card.sun-card .fact-label { color: var(--sun); }
+  .fact-title {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 3px;
+  }
+  .fact-text {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Bottom motto */
+  .motto {
+    margin-top: 32px;
+    text-align: center;
+    animation: fadeUp 1.5s ease both;
+  }
+  .motto-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--muted);
+  }
+  .motto-text span { color: var(--lago); }
+
+  /* Section divider */
+  .section-head {
+    width: 100%;
+    margin: 32px 0 14px;
+    animation: fadeUp 1.4s ease both;
+  }
+  .section-head-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .section-head-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .section-head-title.green { color: var(--green); }
+  .section-head-title.sun { color: var(--sun); }
+  .section-head-title.lago { color: var(--lago); }
+
+  /* Todo items */
+  .todo-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeUp 1.5s ease both;
+  }
+  .todo-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .todo-item.done-todo {
+    border-color: rgba(6,255,165,0.3);
+    background: rgba(6,255,165,0.05);
+  }
+  .todo-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--muted);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.2s;
+    margin-top: 1px;
+  }
+  .todo-item.done-todo .todo-check {
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--night);
+  }
+  .todo-body {}
+  .todo-title {
+    font-size: 14px;
+    font-weight: 700;
+    transition: color 0.2s;
+    line-height: 1.3;
+  }
+  .todo-item.done-todo .todo-title {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  .todo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .todo-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 6px;
+    padding: 2px 7px;
+    margin-bottom: 4px;
+  }
+  .tag-jetzt { background: rgba(255,100,100,0.15); color: #ff6464; }
+  .tag-bald  { background: rgba(255,209,102,0.15); color: var(--sun); }
+  .tag-pack  { background: rgba(0,200,255,0.12); color: var(--lago); }
+
+  /* Todo progress */
+  .todo-progress {
+    width: 100%;
+    margin-bottom: 8px;
+    animation: fadeUp 1.45s ease both;
+  }
+  .todo-progress-bar {
+    height: 3px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .todo-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lago), var(--green));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .todo-progress-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-align: right;
+  }
+
+  /* Pack grid */
+  .pack-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    animation: fadeUp 1.6s ease both;
+  }
+  .pack-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pack-card.done-pack {
+    border-color: rgba(0,200,255,0.35);
+    background: rgba(0,200,255,0.07);
+  }
+  .pack-card-icon { font-size: 22px; margin-bottom: 6px; }
+  .pack-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    transition: color 0.2s;
+  }
+  .pack-card.done-pack .pack-card-title { color: var(--lago); }
+  .pack-card-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+  .pack-card-check {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+  .pack-card.done-pack .pack-card-check {
+    background: var(--lago);
+    border-color: var(--lago);
+    color: var(--night);
+  }
+
+  /* Cool tips */
+  .tips-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeUp 1.7s ease both;
+  }
+  .tip-item {
+    background: var(--card);
+    border-left: 3px solid var(--lago);
+    border-radius: 0 12px 12px 0;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .tip-item.green-tip { border-left-color: var(--green); }
+  .tip-item.sun-tip { border-left-color: var(--sun); }
+  .tip-strong { font-weight: 700; display: block; margin-bottom: 2px; }
+
+  /* Gallery */
+  .gallery-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    animation: fadeUp 1.65s ease both;
+  }
+  .gallery-item {
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 1;
+    display: block;
+    border: 1px solid var(--border);
+    transition: transform 0.2s;
+  }
+  .gallery-item:active { transform: scale(0.96); }
+  .gallery-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.85) saturate(1.1);
+    transition: filter 0.3s;
+  }
+  .gallery-item:hover img { filter: brightness(1) saturate(1.2); }
+  .gallery-caption {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(5,13,26,0.85));
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 16px 6px 6px;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+  .gallery-more {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 1px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* arrived state */
+  .arrived-banner {
+    display: none;
+    background: linear-gradient(135deg, var(--lago), var(--green));
+    color: var(--night);
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="wave-wrap">
+  <div class="wave wave1"></div>
+  <div class="wave wave2"></div>
+</div>
+
+<div class="page">
+
+  <div class="header">
+    <div class="flag-row">🇩🇪 ➜ 🇮🇹</div>
+    <div class="title">LAGO<br>MAGGIORE</div>
+    <div class="subtitle">Gustav's Countdown · Sommer 2026</div>
+  </div>
+
+  <div class="arrived-banner" id="arrived-banner">
+    🎉 Wir sind da! Ciao Italia! 🏕️
+  </div>
+
+  <div class="countdown-wrap">
+    <div class="countdown-grid">
+      <div class="cd-unit">
+        <div class="cd-num" id="cd-days">–</div>
+        <div class="cd-label">Tage</div>
+      </div>
+      <div class="cd-unit">
+        <div class="cd-num" id="cd-hours">–</div>
+        <div class="cd-label">Stunden</div>
+      </div>
+      <div class="cd-unit">
+        <div class="cd-num" id="cd-mins">–</div>
+        <div class="cd-label">Minuten</div>
+      </div>
+      <div class="cd-unit">
+        <div class="cd-num" id="cd-secs">–</div>
+        <div class="cd-label">Sekunden</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="abfahrt-chip" id="abfahrt-chip">
+    📍 Bremen · Sa 11. Juli · 08:00 Uhr · Abfahrt!
+  </div>
+
+  <!-- Mini-Stationen -->
+  <div class="stops">
+    <div class="stop">
+      <div class="stop-dot">🏠</div>
+      <div class="stop-info">
+        <div class="stop-date">Sa 11. Juli · 08:00</div>
+        <div class="stop-title">Abfahrt Bremen</div>
+        <div class="stop-sub">Rückertstr. 26 → A7 südwärts · ~660 km bis Weißenhorn</div>
+      </div>
+    </div>
+    <div class="stop">
+      <div class="stop-dot">🏔️</div>
+      <div class="stop-info">
+        <div class="stop-date">Mo 13. Juli · ~08:00</div>
+        <div class="stop-title">Über die Alpen!</div>
+        <div class="stop-sub">Reschenpass 1.504 m — erster Blick auf Italien 🇮🇹</div>
+      </div>
+    </div>
+    <div class="stop">
+      <div class="stop-dot highlight">🌊</div>
+      <div class="stop-info">
+        <div class="stop-date">Mo 13. Juli · ~13:00</div>
+        <div class="stop-title">Lakeview Cannobio</div>
+        <div class="stop-sub">Privatstrand · SUP · Kajak · Wasserrutsche · 5 Nächte</div>
+      </div>
+    </div>
+    <div class="stop">
+      <div class="stop-dot">🌿</div>
+      <div class="stop-info">
+        <div class="stop-date">Sa 18. Juli · 12:00</div>
+        <div class="stop-title">Valle Romantica</div>
+        <div class="stop-sub">Gebirgsfluss · Canyoning · Fluss-Schwimmen · 6 Nächte</div>
+      </div>
+    </div>
+    <div class="stop">
+      <div class="stop-dot">🏁</div>
+      <div class="stop-info">
+        <div class="stop-date">Fr 24. Juli</div>
+        <div class="stop-title">Heimreise</div>
+        <div class="stop-sub">1.100 km zurück nach Bremen — mit Lago im Herzen</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fun Facts für Gustav -->
+  <div class="facts-title">Was dich erwartet 👇</div>
+  <div class="facts-scroll">
+
+    <div class="fact-card">
+      <div class="fact-emoji">🚤</div>
+      <div class="fact-content">
+        <div class="fact-label">Lakeview · Wassersport</div>
+        <div class="fact-title">SUP, Kajak & Wassersport</div>
+        <div class="fact-text">Am Privatstrand gibt es Stand-Up-Paddle und Kajak zum Mieten. Dazu Wasserrutsche, Pedalboot und Tretboote — direkt am See.</div>
+      </div>
+    </div>
+
+    <div class="fact-card green-card">
+      <div class="fact-emoji">🏄</div>
+      <div class="fact-content">
+        <div class="fact-label">Valle Romantica · Action</div>
+        <div class="fact-title">Abenteuer im Bergfluss</div>
+        <div class="fact-text">Der Cannobino ist ein echter Gebirgsfluss — kristallklares Wasser, Stromschnellen, Felsen. Schwimmen, Klettern, Erkunden — mitten in der Natur.</div>
+      </div>
+    </div>
+
+    <div class="fact-card sun-card">
+      <div class="fact-emoji">🌡️</div>
+      <div class="fact-content">
+        <div class="fact-label">Wetter · Juli am Lago</div>
+        <div class="fact-title">Bis zu 35°C & 24°C Wassertemperatur</div>
+        <div class="fact-text">Im Juli klettern die Temperaturen auf bis zu 35°C — und das Wasser hat rund 24°C. Der Lago Maggiore ist 65 km lang und bis zu 372 m tief. Einer der größten Seen Europas.</div>
+      </div>
+    </div>
+
+    <div class="fact-card green-card">
+      <div class="fact-emoji">🌌</div>
+      <div class="fact-content">
+        <div class="fact-label">Camping · Nacht</div>
+        <div class="fact-title">Sternenhimmel ohne Stadtlicht</div>
+        <div class="fact-text">Im Val Cannobina gibt es kaum Lichtverschmutzung. Nachts siehst du die Milchstraße mit bloßem Auge — komplett anders als in Bremen. Stirnlampe einpacken!</div>
+      </div>
+    </div>
+
+    <div class="fact-card sun-card">
+      <div class="fact-emoji">🍕</div>
+      <div class="fact-content">
+        <div class="fact-label">Essen · Italien</div>
+        <div class="fact-title">Pizza, Pasta & Gelato every day</div>
+        <div class="fact-text">In Cannobio gibt's echte italienische Pizzerien direkt am See. Und Gelato kostet nur 1,50 € die Kugel. Zwei Kugeln. Täglich. Mindest.</div>
+      </div>
+    </div>
+
+    <div class="fact-card">
+      <div class="fact-emoji">🇨🇭</div>
+      <div class="fact-content">
+        <div class="fact-label">5 km entfernt · Schweiz</div>
+        <div class="fact-title">Kurz mal in die Schweiz</div>
+        <div class="fact-text">Valle Romantica liegt nur 5 km von der Schweizer Grenze. Locarno und Ascona sind in 15 Minuten erreichbar — Schweizer Lago-Flair inklusive.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TO-DOs für Gustav -->
+  <div class="section-head">
+    <div class="section-head-label">Deine Mission</div>
+    <div class="section-head-title green">TO-DO LIST ✅</div>
+  </div>
+
+  <div class="todo-progress">
+    <div class="todo-progress-bar"><div class="todo-progress-fill" id="todo-fill"></div></div>
+    <div class="todo-progress-label" id="todo-label">0 / 0 erledigt</div>
+  </div>
+
+  <div class="todo-list">
+
+    <div class="todo-item" onclick="toggleTodo(this)">
+      <div class="todo-check"></div>
+      <div class="todo-body">
+        <div class="todo-tag tag-jetzt">Sofort</div>
+        <div class="todo-title">Eigene Tasche packen</div>
+        <div class="todo-sub">50–60L Rucksack oder Reisetasche — die Liste unten hilft dir!</div>
+      </div>
+    </div>
+
+    <div class="todo-item" onclick="toggleTodo(this)">
+      <div class="todo-check"></div>
+      <div class="todo-body">
+        <div class="todo-tag tag-jetzt">Sofort</div>
+        <div class="todo-title">Personalausweis checken</div>
+        <div class="todo-sub">Gültig? Nicht abgelaufen? Liegt er greifbar? Für Italien zwingend nötig.</div>
+      </div>
+    </div>
+
+
+    <div class="todo-item" onclick="toggleTodo(this)">
+      <div class="todo-check"></div>
+      <div class="todo-body">
+        <div class="todo-tag tag-bald">Bald</div>
+        <div class="todo-title">Musik-Playlist für die Fahrt machen</div>
+        <div class="todo-sub">~8 Stunden Fahrt — eine gute Playlist zusammenstellen. Du bist der DJ!</div>
+      </div>
+    </div>
+
+    <div class="todo-item" onclick="toggleTodo(this)">
+      <div class="todo-check"></div>
+      <div class="todo-body">
+        <div class="todo-tag tag-bald">Bald</div>
+        <div class="todo-title">Taschengeld klären</div>
+        <div class="todo-sub">Gelato, Souvenir, Fähre — kläre mit Papa wieviel Taschengeld für den Urlaub.</div>
+      </div>
+    </div>
+
+    <div class="todo-item" onclick="toggleTodo(this)">
+      <div class="todo-check"></div>
+      <div class="todo-body">
+        <div class="todo-tag tag-pack">Einpacken</div>
+        <div class="todo-title">Eigene Tasche selbst schließen & wiegen</div>
+        <div class="todo-sub">Maximal ~12–15 kg — du trägst sie selbst vom Auto zum Stellplatz!</div>
+      </div>
+    </div>
+
+    <div class="todo-item" onclick="toggleTodo(this)">
+      <div class="todo-check"></div>
+      <div class="todo-body">
+        <div class="todo-tag tag-pack">Einpacken</div>
+        <div class="todo-title">Taschenmesser einpacken</div>
+        <div class="todo-sub">Mit Papa absprechen welches — und vorher den richtigen Umgang üben.</div>
+      </div>
+    </div>
+
+    <div class="todo-item" onclick="toggleTodo(this)">
+      <div class="todo-check"></div>
+      <div class="todo-body">
+        <div class="todo-tag tag-pack">Einpacken</div>
+        <div class="todo-title">Stirnlampe + Ersatzbatterien</div>
+        <div class="todo-sub">Nachts zum Klo, Sterne gucken, Zelt-Lesen — ohne Stirnlampe läuft nichts.</div>
+      </div>
+    </div>
+
+    <div class="todo-item" onclick="toggleTodo(this)">
+      <div class="todo-check"></div>
+      <div class="todo-body">
+        <div class="todo-tag tag-pack">Einpacken</div>
+        <div class="todo-title">Notizbuch / kleines Tagebuch</div>
+        <div class="todo-sub">Klingt uncool, ist aber krass — nach dem Urlaub weißt du noch genau was war.</div>
+      </div>
+    </div>
+
+    <div class="todo-item" onclick="toggleTodo(this)">
+      <div class="todo-check"></div>
+      <div class="todo-body">
+        <div class="todo-tag tag-pack">Einpacken</div>
+        <div class="todo-title">Lieblingsbuch / Offline-Spiel / Karten</div>
+        <div class="todo-sub">Für ruhige Abende im Zelt oder Regenpausen. Uno, Spielkarten, oder was du magst.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PACKLISTE Gustav -->
+  <div class="section-head">
+    <div class="section-head-label">Deine Tasche · 50–60L</div>
+    <div class="section-head-title lago">PACK IT 🎒</div>
+  </div>
+
+  <div class="pack-grid">
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">👕</div>
+      <div class="pack-card-title">7× T-Shirt</div>
+      <div class="pack-card-sub">leicht, luftig</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">🩳</div>
+      <div class="pack-card-title">4× Shorts</div>
+      <div class="pack-card-sub">Hauptkleidung</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">🩱</div>
+      <div class="pack-card-title">1× Badehose</div>
+      <div class="pack-card-sub">täglich im See</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">🧥</div>
+      <div class="pack-card-title">Hoodie + Regenjacke</div>
+      <div class="pack-card-sub">Abend + Gewitter</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">🩲</div>
+      <div class="pack-card-title">8× Unterwäsche</div>
+      <div class="pack-card-sub">+ 6 Paar Socken</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">👟</div>
+      <div class="pack-card-title">Sneaker + Flip-Flops</div>
+      <div class="pack-card-sub">+ Badeschuhe!</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">🧢</div>
+      <div class="pack-card-title">Kappe + Sonnenbrille</div>
+      <div class="pack-card-sub">35°C am See</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">🔦</div>
+      <div class="pack-card-title">Stirnlampe</div>
+      <div class="pack-card-sub">nachts zum Klo</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">🧴</div>
+      <div class="pack-card-title">Sonnencreme SPF 50</div>
+      <div class="pack-card-sub">du wirst brennen</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">🤿</div>
+      <div class="pack-card-title">Maske + Schnorchel</div>
+      <div class="pack-card-sub">Unterwasserwelt!</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">📱</div>
+      <div class="pack-card-title">Ladekabel + Powerbank</div>
+      <div class="pack-card-sub">immer dabei</div>
+      <div class="pack-card-check"></div>
+    </div>
+    <div class="pack-card" onclick="togglePack(this)">
+      <div class="pack-card-icon">🎒</div>
+      <div class="pack-card-title">Kleiner Tagesrucksack</div>
+      <div class="pack-card-sub">für Ausflüge + Strand</div>
+      <div class="pack-card-check"></div>
+    </div>
+  </div>
+
+  <!-- COOL-TIPPS -->
+  <div class="section-head">
+    <div class="section-head-label">Insider-Wissen</div>
+    <div class="section-head-title sun">PRO TIPPS 🔥</div>
+  </div>
+
+  <div class="tips-list">
+    <div class="tip-item">
+      <span class="tip-strong">🦶 Badeschuhe — kein Witz</span>
+      Der Lago Maggiore hat Kieselsteine, keine Sandstrände. Ohne Badeschuhe läufst du auf einem Nagelbett. Wirklich einpacken.
+    </div>
+    <div class="tip-item green-tip">
+      <span class="tip-strong">🌊 Frühmorgens an den See</span>
+      Vor 9 Uhr ist der Strand fast leer und das Wasser ist glasglatt. Die beste Zeit um zu schwimmen oder SUP zu fahren — ohne Gedränge.
+    </div>
+    <div class="tip-item sun-tip">
+      <span class="tip-strong">🍦 Gelato-Strategie</span>
+      Niemals am Hafen kaufen — dort ist es am teuersten. 5 Minuten ins Dorf gehen: gleiche Qualität, halb so teuer. Papini am Lungolago ist top.
+    </div>
+    <div class="tip-item">
+      <span class="tip-strong">📸 Abends die besten Fotos</span>
+      Das goldene Licht über dem Lago bei Sonnenuntergang ist unreal. Handy raus, Panorama-Modus — die Bilder werden krass.
+    </div>
+    <div class="tip-item green-tip">
+      <span class="tip-strong">🔪 Taschenmesser = Camping-Grundausstattung</span>
+      Schnur durchtrennen, Brot schneiden, Äste schälen — ein Taschenmesser ist beim Camping dauernd in Benutzung. Lerne vorher den richtigen Umgang damit, dann macht es richtig Spaß.
+    </div>
+    <div class="tip-item sun-tip">
+      <span class="tip-strong">🌩️ Gewitter kommen schnell</span>
+      Nachmittags können Sommergewitter auftauchen. Wenn du im See bist und der Himmel dunkel wird: sofort raus. Die sind heftig.
+    </div>
+    <div class="tip-item">
+      <span class="tip-strong">🇮🇹 Paar Worte Italienisch</span>
+      "Grazie" (Danke), "Prego" (Bitte), "Quanto costa?" (Was kostet das?), "Un gelato, per favore" (Ein Eis bitte). Die Leute freuen sich wenn du's versuchst.
+    </div>
+  </div>
+
+  <!-- GALLERY Lakeview -->
+  <div class="section-head">
+    <div class="section-head-label">Camp 1 · 13.–18. Juli</div>
+    <div class="section-head-title lago">LAKEVIEW 📸</div>
+  </div>
+
+  <div class="gallery-grid">
+    <a class="gallery-item" href="https://lakeview.eu/bilder-cannobio/" target="_blank">
+      <img src="https://lakeview.eu/wp-content/uploads/2024/01/Cannobio-Lago-Maggiore-Webcam.jpg" alt="Lago Maggiore Cannobio" loading="lazy">
+      <div class="gallery-caption">🌊 Lago</div>
+    </a>
+    <a class="gallery-item" href="https://lakeview.eu/bilder-cannobio/" target="_blank">
+      <img src="https://lakeview.eu/wp-content/uploads/2022/03/lakeview-cannobio-strand-lago-maggiore.jpg" alt="Strand Lakeview" loading="lazy" onerror="this.src='https://lakeview.eu/wp-content/uploads/2022/03/lago_lv-85.jpg'">
+      <div class="gallery-caption">🏖️ Strand</div>
+    </a>
+    <a class="gallery-item" href="https://lakeview.eu/bilder-cannobio/" target="_blank">
+      <img src="https://lakeview.eu/wp-content/uploads/2022/03/sup-lakeview-cannobio.jpg" alt="SUP Lakeview" loading="lazy" onerror="this.src='https://lakeview.eu/wp-content/uploads/2022/03/lago_lv-85.jpg'">
+      <div class="gallery-caption">🏄 SUP</div>
+    </a>
+    <a class="gallery-item" href="https://lakeview.eu/bilder-cannobio/" target="_blank">
+      <img src="https://lakeview.eu/wp-content/uploads/2022/03/lakeview-cannobio-camping-zelt.jpg" alt="Camping Zelt" loading="lazy" onerror="this.src='https://lakeview.eu/wp-content/uploads/2022/03/lago_lv-85.jpg'">
+      <div class="gallery-caption">⛺ Camping</div>
+    </a>
+    <a class="gallery-item" href="https://lakeview.eu/bilder-cannobio/" target="_blank">
+      <img src="https://lakeview.eu/wp-content/uploads/2022/03/lakeview-cannobio-wasserrutsche.jpg" alt="Wasserrutsche" loading="lazy" onerror="this.src='https://lakeview.eu/wp-content/uploads/2022/03/lago_lv-85.jpg'">
+      <div class="gallery-caption">🎢 Rutsche</div>
+    </a>
+    <a class="gallery-item" href="https://lakeview.eu/bilder-cannobio/" target="_blank">
+      <img src="https://lakeview.eu/wp-content/uploads/2022/03/lakeview-cannobio-ristorante.jpg" alt="Ristorante" loading="lazy" onerror="this.src='https://lakeview.eu/wp-content/uploads/2022/03/lago_lv-85.jpg'">
+      <div class="gallery-caption">🍕 Ristorante</div>
+    </a>
+  </div>
+  <a class="gallery-more" href="https://lakeview.eu/bilder-cannobio/" target="_blank" style="color:var(--lago);">
+    Alle Lakeview Fotos ansehen ↗
+  </a>
+
+  <!-- GALLERY Valle Romantica -->
+  <div class="section-head">
+    <div class="section-head-label">Dein nächster Spot</div>
+    <div class="section-head-title green">VALLE ROMANTICA 📸</div>
+  </div>
+
+  <div class="gallery-grid">
+    <a class="gallery-item" href="https://www.riviera-valleromantica.com/gallery-valle-romantica.html" target="_blank">
+      <img src="https://media.riviera-valleromantica.com/page/piscina_valle-romantica_420px.jpg" alt="Das Schwimmbad" loading="lazy">
+      <div class="gallery-caption">🏊 Schwimmbad</div>
+    </a>
+    <a class="gallery-item" href="https://www.riviera-valleromantica.com/gallery-valle-romantica.html" target="_blank">
+      <img src="https://media.riviera-valleromantica.com/page/il-fiume-cannobino-lago-maggiore_420px.jpg" alt="Cannobino Fluss" loading="lazy">
+      <div class="gallery-caption">🌊 Gebirgsfluss</div>
+    </a>
+    <a class="gallery-item" href="https://www.riviera-valleromantica.com/gallery-valle-romantica.html" target="_blank">
+      <img src="https://media.riviera-valleromantica.com/page/osteria-vino-divino_420px.jpg" alt="Osteria Vino Divino" loading="lazy">
+      <div class="gallery-caption">🍷 Osteria</div>
+    </a>
+    <a class="gallery-item" href="https://www.riviera-valleromantica.com/gallery-valle-romantica.html" target="_blank">
+      <img src="https://media.riviera-valleromantica.com/page/camping-lago-maggiore-cannobio_420px.jpg" alt="Camping Valle Romantica" loading="lazy">
+      <div class="gallery-caption">⛺ Camp</div>
+    </a>
+    <a class="gallery-item" href="https://www.riviera-valleromantica.com/gallery-valle-romantica.html" target="_blank">
+      <img src="https://media.riviera-valleromantica.com/page/Cafeteria-Valle-Romantica-Pergola-uva_420px.jpg" alt="Cafeteria" loading="lazy">
+      <div class="gallery-caption">☕ Cafeteria</div>
+    </a>
+    <a class="gallery-item" href="https://www.riviera-valleromantica.com/gallery-valle-romantica.html" target="_blank">
+      <img src="https://media.riviera-valleromantica.com/page/camelie-lago-maggiore_420px.jpg" alt="Kamelien" loading="lazy">
+      <div class="gallery-caption">🌺 Botanik</div>
+    </a>
+  </div>
+  <a class="gallery-more" href="https://www.riviera-valleromantica.com/gallery-valle-romantica.html" target="_blank">
+    Alle Fotos ansehen ↗
+  </a>
+
+  <div class="motto">
+    <div class="motto-text">SEE YOU AT THE <span>LAGO</span> 🌊</div>
+  </div>
+
+</div>
+
+<script>
+// Stars
+const starsEl = document.getElementById('stars');
+for(let i = 0; i < 80; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.style.cssText = `
+    left: ${Math.random()*100}%;
+    top: ${Math.random()*70}%;
+    --d: ${2 + Math.random()*4}s;
+    --delay: ${Math.random()*4}s;
+    --op: ${0.3 + Math.random()*0.7};
+    width: ${1 + Math.random()*2}px;
+    height: ${1 + Math.random()*2}px;
+  `;
+  starsEl.appendChild(s);
+}
+
+// Todo toggle
+function toggleTodo(el) {
+  el.classList.toggle('done-todo');
+  const check = el.querySelector('.todo-check');
+  check.textContent = el.classList.contains('done-todo') ? '✓' : '';
+  updateTodoProgress();
+}
+function updateTodoProgress() {
+  const all = document.querySelectorAll('.todo-item');
+  const done = document.querySelectorAll('.todo-item.done-todo').length;
+  const pct = all.length ? Math.round(done/all.length*100) : 0;
+  document.getElementById('todo-fill').style.width = pct + '%';
+  document.getElementById('todo-label').textContent = done + ' / ' + all.length + ' erledigt';
+}
+
+// Pack toggle
+function togglePack(el) {
+  el.classList.toggle('done-pack');
+  const check = el.querySelector('.pack-card-check');
+  check.textContent = el.classList.contains('done-pack') ? '✓' : '';
+}
+
+// Countdown
+const TARGET = new Date('2026-07-11T08:00:00');
+const prevVals = {};
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function tick() {
+  const now = new Date();
+  const diff = TARGET - now;
+
+  if(diff <= 0) {
+    document.getElementById('arrived-banner').style.display = 'block';
+    document.getElementById('cd-days').textContent = '00';
+    document.getElementById('cd-hours').textContent = '00';
+    document.getElementById('cd-mins').textContent = '00';
+    document.getElementById('cd-secs').textContent = '00';
+    document.getElementById('abfahrt-chip').textContent = '🎉 Los geht\'s! Ciao Italia!';
+    return;
+  }
+
+  const days  = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins  = Math.floor((diff % 3600000) / 60000);
+  const secs  = Math.floor((diff % 60000) / 1000);
+
+  const vals = { days, hours, mins, secs };
+  const ids  = { days:'cd-days', hours:'cd-hours', mins:'cd-mins', secs:'cd-secs' };
+
+  for(const key of ['days','hours','mins','secs']) {
+    const el = document.getElementById(ids[key]);
+    const v = pad(vals[key]);
+    if(v !== prevVals[key]) {
+      el.textContent = v;
+      el.classList.remove('flip');
+      void el.offsetWidth;
+      el.classList.add('flip');
+      prevVals[key] = v;
+    }
+  }
+}
+
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
